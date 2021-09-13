@@ -14,15 +14,23 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
+    - name: Checkout Moto
+      uses: actions/checkout@v2
+      with:
+        repository: spulec/moto
+        ref: master
+        path: moto
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Start MotoServer
       run: |
+        cd moto
         python setup.py sdist
         docker run --rm -t --name motoserver -e TEST_SERVER_MODE=true -e AWS_SECRET_ACCESS_KEY=server_secret -e AWS_ACCESS_KEY_ID=server_key -v `pwd`:/moto -p 5000:5000 -v /var/run/docker.sock:/var/run/docker.sock python:3.7-buster /moto/travis_moto_server.sh &
         python wait_for.py
+        cd ..
     - name: Install project dependencies
       run: |
         pip install -r requirements.txt
